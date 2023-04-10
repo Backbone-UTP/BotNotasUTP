@@ -1,0 +1,29 @@
+{
+  "name": "botnotasutp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon src/botTelegram.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JGaviria0/BotNotasUTP.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JGaviria0/BotNotasUTP/issues"
+  },
+  "homepage": "https://github.com/JGaviria0/BotNotasUTP#readme",
+  "type": "module",
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "puppeteer": "^19.8.5",
+    "random-useragent": "^0.5.0",
+    "telegraf": "^4.12.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}

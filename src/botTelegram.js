@@ -34,6 +34,7 @@ bot.command([/notas.*/], async (ctx) => {
     const username = input[1]
     const password = input[2]
     const html = await scraping(username, password)
+    console.log(html)
     const values = readHTML(html)
     for(const ms of values){
       ctx.reply(ms)

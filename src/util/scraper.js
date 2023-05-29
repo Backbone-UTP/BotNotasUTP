@@ -1,7 +1,7 @@
 import puppeteer from "puppeteer";
 import * as randomUseragent from "random-useragent";
 import { message } from "telegraf/filters";
-import keytest from '../keytest.json' assert {type: 'json'};
+// import keytest from '../keytest.json' assert {type: 'json'};
 
 const scraping = async (user, password) => {
 
@@ -10,7 +10,7 @@ const scraping = async (user, password) => {
     });
 
     const browser = await puppeteer.launch({
-        headless: true, 
+        headless: false, 
         ignoreHTTPSErrors: true,
     });
 

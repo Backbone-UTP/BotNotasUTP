@@ -31,15 +31,20 @@ bot.command([/notas.*/], async (ctx) => {
     ctx.reply('Vamos a procesar su peticion, esto puede tardar algunos minutos.').then(data => inforeplymessage = data)
     console.log("Respondiendo a",ctx.from.first_name, ctx.from.username)
     const input = ctx.update.message.text.split(" ")
-    const username = input[1]
-    const password = input[2]
-    const html = await scraping(username, password)
-    const values = readHTML(html)
-    for(const ms of values){
-      ctx.reply(ms)
+    if(input.length != 3){
+      ctx.reply('No ingreso bien los datos /nDebe ser /notas [Cedula] [contraseña]')
+    }else {
+      const username = input[1]
+      const password = input[2]
+      const page = await scraping(username, password)
+      const values = await readHTML(page);
+      page.close();
+      for(const ms of values){
+        ctx.reply(ms)
+      }
     }
     ctx.deleteMessage(ctx.update.message.message_id)
-    ctx.deleteMessage(inforeplymessage.message_id)
+    // ctx.deleteMessage(inforeplymessage.message_id)
 })
 
 bot.launch()

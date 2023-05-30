@@ -1,7 +1,7 @@
 import puppeteer from "puppeteer";
 import * as randomUseragent from "random-useragent";
 import { message } from "telegraf/filters";
-import keytest from '../keytest.json' assert {type: 'json'};
+// import keytest from '../keytest.json' assert {type: 'json'};
 
 const scraping = async (user, password) => {
 
@@ -34,7 +34,29 @@ const scraping = async (user, password) => {
 
     await page.goto("https://app4.utp.edu.co/reportes/ryc/ReporteDetalladoNotasxEstudiante.php", {timeout: 0})
 
-    return await page.content()
+    // console.log(await page.$("//html/body/table/tbody/tr[4]/td/table/tbody/tr/td/table/tbody/tr[3]/td/table"))
+    return page;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// scraping('1004995317', 'MatiaS!181120.');
 export { scraping }

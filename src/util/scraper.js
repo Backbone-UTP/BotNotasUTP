@@ -10,7 +10,7 @@ const scraping = async (user, password) => {
     });
 
     const browser = await puppeteer.launch({
-        headless: false, 
+        headless: true, 
         ignoreHTTPSErrors: true,
     });
 
@@ -34,7 +34,29 @@ const scraping = async (user, password) => {
 
     await page.goto("https://app4.utp.edu.co/reportes/ryc/ReporteDetalladoNotasxEstudiante.php", {timeout: 0})
 
-    return await page.content()
+    // console.log(await page.$("//html/body/table/tbody/tr[4]/td/table/tbody/tr/td/table/tbody/tr[3]/td/table"))
+    return page;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// scraping('1004995317', 'MatiaS!181120.');
 export { scraping }

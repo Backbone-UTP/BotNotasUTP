@@ -4,12 +4,14 @@ import * as dotenv from 'dotenv'
 import { readHTML } from "./util/extractValues.js"
 import { scraping } from "./util/scraper.js"
 dotenv.config()
+/*
 const {
     URL_BOT,
     ENVIRONMENT
 } = process.env
-
-const bot = new Telegraf(URL_BOT)
+*/
+const URL_BOT = process.env;
+const bot = new Telegraf(URL_BOT);
 
 bot.use((ctx, next) => {
   ctx.state.users = 75;

@@ -1,6 +1,7 @@
 import puppeteer from "puppeteer";
 import * as randomUseragent from "random-useragent";
 import { message } from "telegraf/filters";
+import { IncorrectData } from "./errors";
 // import keytest from '../keytest.json' assert {type: 'json'};
 
 const logInScraping = async (user, password) => {
@@ -31,6 +32,9 @@ const logInScraping = async (user, password) => {
     await page.click("#enviar");
 
     await page.waitForNavigation();
+
+    if(page.url() != 'https://app4.utp.edu.co/pe/utp.php')
+        throw new IncorrectData("Usuario y/o contrasela incorrectos");
     
     return page; // returns portal home page (After log in)
 

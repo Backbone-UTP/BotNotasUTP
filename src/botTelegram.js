@@ -1,10 +1,6 @@
 import { Telegraf } from "telegraf";
-import { message } from 'telegraf/filters';
 import * as dotenv from 'dotenv'
-import { readHTML } from "./util/extractValues.js"
-import { goToPage, historicGradesScraping, logInScraping } from "./util/scraper.js"
-import { HTTPResponse } from "puppeteer";
-import { IdValidationError } from "./util/errors.js";
+import {historicGradesScraping, logInScraping } from "./util/scraper.js"
 import { validateInputLogIn } from "./util/validations.js";
 dotenv.config()
 /*
@@ -39,8 +35,7 @@ bot.help(ctx => ctx.reply('help command'))
 bot.settings(ctx => ctx.reply('settings command'))
 
 const showInfoMessage = (ctx, message) => {
-  let inforeplymessage;
-  ctx.reply(message).then(data => inforeplymessage = data);
+  ctx.reply(message);
   console.log("Respondiendo a", ctx.from.first_name, ctx.from.username);
 }
 
@@ -58,105 +53,59 @@ const ERRORS_HANDLING = {
 
 // Command for current semester grades.
 bot.command([/notas.*/], async (ctx) => {
-  
-  showInfoMessage(ctx, 'Vamos a procesar su peticion, esto puede tardar algunos minutos.');
-  const userInput = ctx.update.message.text.split(" ");
-  const id = userInput[0];
-  const password = userInput[1];
 
-  // Hacer las excepciones personalizadas con las clases  para definir cada tipo de error en el mensaje a mostrar al usuario
+  showInfoMessage(ctx, 'Vamos a procesar su peticion, esto puede tardar algunos minutos.');
+  
   try {
+    const userInput = ctx.update.message.text.split(" ");
+    const id = userInput[1];
+    const password = userInput[2];
+
     validateInputLogIn(id, userInput)
     const page = await logInScraping(id, password);
     await page.goto(GRADES_PAGE_URL);
-    const values = await readHTML(page);
-    
+    const values = await logInScraping(page);
+
     console.log(values);
 
     for (const ms of values) {
       ctx.reply(ms)
     }
     page.close();
-
-    
   } catch (error) {
     ERRORS_HANDLING[error.name](error.message, ctx)
+  } finally {
+    ctx.deleteMessage(ctx.update.message.message_id);
   }
-
-  if (validateInputLogIn(userInput)) {
-
-    const id = userInput[1];
-    const password = userInput[2];
-
-    const page = await logInScraping(id, password);
-    await page.goto(GRADES_PAGE_URL);
-    const values = await readHTML(page);
-    //console.log(values);
-
-    for (const ms of values) {
-      ctx.reply(ms)
-    }
-    page.close();
-
-  }else{
-    ctx.reply()
-  }
-
-  try {
-
-  } catch (error) {
-
-  }
-  const input = ctx.update.message.text.split(" ")
-
-  if (input.length != 3) {
-    ctx.reply('No ingreso bien los datos /nDebe ser /notas [Cedula] [contraseña]')
-  } else {
-    const username = input[1];
-    const password = input[2];
-
-    try {
-      const page = await logInScraping(username, password);
-      await page.goto(GRADES_PAGE_URL);
-      const values = await readHTML(page);
-      console.log(values);
-      for (const ms of values) {
-        ctx.reply(ms)
-      }
-      page.close();
-    } catch (error) {
-      console.log("Error: " + error);
-    }
-  }
-  //ctx.deleteMessage(ctx.update.message.message_id)
 })
 
 // Command for current semester grades.
 bot.command([/promedio.*/], async (ctx) => {
-  let inforeplymessage
-  ctx.reply('Vamos a procesar su peticion, esto puede tardar algunos minutos.').then(data => inforeplymessage = data)
-  console.log("Respondiendo a", ctx.from.first_name, ctx.from.username)
-  const input = ctx.update.message.text.split(" ")
-  if (input.length != 3) {
-    ctx.reply('No ingreso bien los datos /nDebe ser /notas [Cedula] [contraseña]')
-  } else {
-    const username = input[1];
-    const password = input[2];
 
-    try {
-      const page = await logInScraping(username, password);
-      await page.goto(GRADES_PAGE_URL);
-      const values = await readHTML(page);
-      console.log(values);
-      for (const ms of values) {
-        ctx.reply(ms)
-      }
-      page.close();
-    } catch (error) {
-      console.log("Error: " + error);
-    }
+  showInfoMessage(ctx, 'Vamos a procesar su peticion, esto puede tardar algunos minutos.');
+
+  try {
+    const userInput = ctx.update.message.text.split(" ");
+    const id = userInput[1];
+    const password = userInput[2];
+
+    validateInputLogIn(id, userInput)
+    const page = await logInScraping(id, password);
+    await page.goto(HISTORIC_PAGE_URL);
+    const userPrograms = await historicGradesScraping(page);
+
+    showInfoMessage(ctx, "Seleccione el programa del que desea ver el promedio de la forma /numero");
+    console.log(userPrograms);
+    
+    userPrograms.forEach(program => showInfoMessage(ctx,"/" + program.id + " " + program.name));
+
+    page.close();
+  } catch (error) {
+    //ERRORS_HANDLING[error.name](error.message, ctx)
+    console.log(error);
+  } finally {
+    ctx.deleteMessage(ctx.update.message.message_id);
   }
-  //ctx.deleteMessage(ctx.update.message.message_id)
 })
 
 

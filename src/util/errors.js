@@ -18,6 +18,6 @@ export class IncorrectData extends Error {
     constructor(message) {
         super(message)
         this.message = message
-        this.name = 'InvalidInputError'
+        this.name = 'IncorrectData'
     }
 }

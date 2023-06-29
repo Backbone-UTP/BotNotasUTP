@@ -2,19 +2,14 @@ import { Telegraf } from "telegraf";
 import * as dotenv from 'dotenv'
 import {historicGradesScraping, logInScraping } from "./util/scraper.js"
 import { validateInputLogIn } from "./util/validations.js";
-dotenv.config()
-/*
-const {
-    URL_BOT,
-    ENVIRONMENT
-} = process.env
-*/
-//const URL_BOT = process.env;
+import { readHTML } from "./util/extractValues.js";
+
 const GRADES_PAGE_URL = "https://app4.utp.edu.co/reportes/ryc/ReporteDetalladoNotasxEstudiante.php";
 const HISTORIC_PAGE_URL = "https://app4.utp.edu.co/MatAcad/verificacion/historial-web/programas.php";
 const USERS_ID_DEFAULT_LENGTH = 10; // Amount of numbers of the citizen's id
+const URL_BOT = process.env.URL_BOT;
 
-const bot = new Telegraf("6151207917:AAFQ9aHQJcPb5qmFRe__GJznRC-jAe0gDoE");
+const bot = new Telegraf(URL_BOT);
 
 bot.use((ctx, next) => {
   ctx.state.users = 75;
@@ -64,7 +59,7 @@ bot.command([/notas.*/], async (ctx) => {
     validateInputLogIn(id, userInput)
     const page = await logInScraping(id, password);
     await page.goto(GRADES_PAGE_URL);
-    const values = await logInScraping(page);
+    const values = await readHTML(page);
 
     console.log(values);
 
@@ -73,7 +68,8 @@ bot.command([/notas.*/], async (ctx) => {
     }
     page.close();
   } catch (error) {
-    ERRORS_HANDLING[error.name](error.message, ctx)
+    //ERRORS_HANDLING[error.name](error.message, ctx)
+    console.log(error);
   } finally {
     ctx.deleteMessage(ctx.update.message.message_id);
   }
@@ -98,6 +94,13 @@ bot.command([/promedio.*/], async (ctx) => {
     console.log(userPrograms);
     
     userPrograms.forEach(program => showInfoMessage(ctx,"/" + program.id + " " + program.name));
+    const programsIds = []
+    userPrograms.forEach(program => programsIds.push(program.id));
+
+    console.log(programsIds);
+    bot.command(programsIds, () => {
+      console.log("Ha seleccionado una carrera");
+    });
 
     page.close();
   } catch (error) {
@@ -107,7 +110,5 @@ bot.command([/promedio.*/], async (ctx) => {
     ctx.deleteMessage(ctx.update.message.message_id);
   }
 })
-
-
 
 bot.launch()

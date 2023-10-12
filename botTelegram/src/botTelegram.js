@@ -1,5 +1,5 @@
 import { Telegraf } from "telegraf";
-import * as dotenv from 'dotenv'
+import 'dotenv/config'; 
 import {historicGradesScraping, logInScraping } from "./util/scraper.js"
 import { validateInputLogIn } from "./util/validations.js";
 import { readHTML } from "./util/extractValues.js";

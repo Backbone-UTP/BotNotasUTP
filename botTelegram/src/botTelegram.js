@@ -1,13 +1,14 @@
 import { Telegraf } from "telegraf";
-import 'dotenv/config'; 
-import {historicGradesScraping, logInScraping } from "./util/scraper.js"
+import * as dotenv from 'dotenv';
+import {historicGradesScraping, logInScraping, getGrades, getSchedule } from "./util/scraper.js"
 import { validateInputLogIn } from "./util/validations.js";
 import { readHTML } from "./util/extractValues.js";
 
 const GRADES_PAGE_URL = "https://app4.utp.edu.co/reportes/ryc/ReporteDetalladoNotasxEstudiante.php";
 const HISTORIC_PAGE_URL = "https://app4.utp.edu.co/MatAcad/verificacion/historial-web/programas.php";
+const SCHEDULE_PAGE_URL = "https://app4.utp.edu.co/MatAcad/verificacion/horario.php";
 const USERS_ID_DEFAULT_LENGTH = 10; // Amount of numbers of the citizen's id
-const URL_BOT = process.env.URL_BOT;
+const URL_BOT = "1622421418:AAFkFveWj569pzZ9V3nT2gMVCf-ZMlCVvX0";
 
 const bot = new Telegraf(URL_BOT);
 
@@ -17,10 +18,11 @@ bot.use((ctx, next) => {
 })
 
 bot.start((ctx) => {
-  ctx.reply('Welcome');
+  ctx.reply(`Welcome ${ctx.from.first_name}`);
   ctx.reply(`Para usar el bot alguno de los siguientes comando\n
-    /notas cedula contraseña\n
-    /promedio cedula contraseña\n
+    /notas código contraseña\n
+    /promedio código contraseña\n
+    /horario código contraseña\n
     Los datos del portal estudiantil`)
 
 })
@@ -57,11 +59,11 @@ bot.command([/notas.*/], async (ctx) => {
     const password = userInput[2];
 
     validateInputLogIn(id, userInput)
-    const page = await logInScraping(id, password);
+    const {page} = await logInScraping(id, password);
     await page.goto(GRADES_PAGE_URL);
     const values = await readHTML(page);
 
-    console.log(values);
+    // console.log(values);
 
     for (const ms of values) {
       ctx.reply(ms)
@@ -86,7 +88,7 @@ bot.command([/promedio.*/], async (ctx) => {
     const password = userInput[2];
 
     validateInputLogIn(id, userInput)
-    const page = await logInScraping(id, password);
+    const {page, browser} = await logInScraping(id, password);
     await page.goto(HISTORIC_PAGE_URL);
     const userPrograms = await historicGradesScraping(page);
 
@@ -97,12 +99,31 @@ bot.command([/promedio.*/], async (ctx) => {
     const programsIds = []
     userPrograms.forEach(program => programsIds.push(program.id));
 
-    console.log(programsIds);
-    bot.command(programsIds, () => {
-      console.log("Ha seleccionado una carrera");
+    // console.log(programsIds);
+    
+    bot.command(programsIds, async (ctx) => {
+      const page = await browser.newPage();
+      await page.goto(HISTORIC_PAGE_URL);
+      const programId = ctx.update.message.text.slice(1);
+      // console.log(page.isClosed());
+      const { grades } = await getGrades(page, programId);
+
+      let sumGrades = 0.0, sumCredits = 0.0;
+      for (let i = 0; i < grades.length; i++) {
+        const grade = grades[i].grade;
+        const credit = grades[i].cred;
+
+        sumGrades += grade * credit;
+        sumCredits += credit;
+      }
+      
+      const result = sumGrades / sumCredits;
+      
+      ctx.reply(`Tu promedio acumulado es de: ${result.toFixed(2)}`)
     });
 
-    page.close();
+    await page.close();
+    // await browser.close();
   } catch (error) {
     //ERRORS_HANDLING[error.name](error.message, ctx)
     console.log(error);
@@ -110,5 +131,35 @@ bot.command([/promedio.*/], async (ctx) => {
     ctx.deleteMessage(ctx.update.message.message_id);
   }
 })
+
+// Command to export schedule
+bot.command([/horario.*/], async (ctx) => {
+  showInfoMessage(ctx, 'Vamos a procesar su peticion, esto puede tardar algunos minutos.');
+
+  try {
+    const userInput = ctx.update.message.text.split(" ");
+    const id = userInput[1];
+    const password = userInput[2];
+
+    validateInputLogIn(id, userInput)
+    const {page, browser} = await logInScraping(id, password);
+    await page.goto(SCHEDULE_PAGE_URL);
+    // await page.waitForNavigation();
+    const schedule = await getSchedule(page);
+
+    console.log(schedule.length());
+    ctx.reply('Tu horario se ha creado');
+    ctx.replyWithDocument('../calendar.ics').catch((error) => {
+      console.log(error);
+    })
+
+    await page.close();
+    await browser.close();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    ctx.deleteMessage(ctx.update.message.message_id);
+  }
+});
 
 bot.launch()

@@ -18,6 +18,7 @@
   "homepage": "https://github.com/JGaviria0/BotNotasUTP#readme",
   "type": "module",
   "dependencies": {
+    "ical-generator": "^5.0.1",
     "dotenv": "^16.3.1",
     "puppeteer": "^19.8.5",
     "random-useragent": "^0.5.0",

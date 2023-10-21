@@ -8,7 +8,7 @@ const GRADES_PAGE_URL = "https://app4.utp.edu.co/reportes/ryc/ReporteDetalladoNo
 const HISTORIC_PAGE_URL = "https://app4.utp.edu.co/MatAcad/verificacion/historial-web/programas.php";
 const SCHEDULE_PAGE_URL = "https://app4.utp.edu.co/MatAcad/verificacion/horario.php";
 const USERS_ID_DEFAULT_LENGTH = 10; // Amount of numbers of the citizen's id
-const URL_BOT = "1622421418:AAFkFveWj569pzZ9V3nT2gMVCf-ZMlCVvX0";
+const URL_BOT = process.env.URL_BOT;
 
 const bot = new Telegraf(URL_BOT);
 

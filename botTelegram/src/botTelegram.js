@@ -1,14 +1,15 @@
-import { Telegraf } from "telegraf";
-import * as dotenv from 'dotenv';
-import {historicGradesScraping, logInScraping, getGrades, getSchedule } from "./util/scraper.js"
+import { Telegraf, Input } from "telegraf";
+import 'dotenv/config'; 
+import fs from 'fs';
 import { validateInputLogIn } from "./util/validations.js";
 import { readHTML } from "./util/extractValues.js";
+import {historicGradesScraping, logInScraping, getGrades, getSchedule } from "./util/scraper.js"
 
 const GRADES_PAGE_URL = "https://app4.utp.edu.co/reportes/ryc/ReporteDetalladoNotasxEstudiante.php";
 const HISTORIC_PAGE_URL = "https://app4.utp.edu.co/MatAcad/verificacion/historial-web/programas.php";
 const SCHEDULE_PAGE_URL = "https://app4.utp.edu.co/MatAcad/verificacion/horario.php";
 const USERS_ID_DEFAULT_LENGTH = 10; // Amount of numbers of the citizen's id
-const URL_BOT = "1622421418:AAFkFveWj569pzZ9V3nT2gMVCf-ZMlCVvX0";
+const URL_BOT = process.env.URL_BOT;
 
 const bot = new Telegraf(URL_BOT);
 
@@ -145,13 +146,22 @@ bot.command([/horario.*/], async (ctx) => {
     const {page, browser} = await logInScraping(id, password);
     await page.goto(SCHEDULE_PAGE_URL);
     // await page.waitForNavigation();
-    const schedule = await getSchedule(page);
+    try {
+      await getSchedule(page)
+    } catch (error) {
+      console.log("Failed to get schedule")
+    }
+    
 
-    console.log(schedule.length());
-    ctx.reply('Tu horario se ha creado');
-    ctx.replyWithDocument('../calendar.ics').catch((error) => {
-      console.log(error);
-    })
+    if (fs.existsSync('./calendar.ics')){
+      ctx.reply('Tu horario se ha creado');
+      ctx.replyWithDocument(Input.fromLocalFile('./calendar.ics', 'calendar.ics')).catch((error) => {
+        console.log(error);
+      })
+    } else {
+      ctx.reply("Ocurrió un error durante el envío del calendario")
+    }
+    
 
     await page.close();
     await browser.close();

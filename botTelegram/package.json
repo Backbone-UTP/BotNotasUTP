@@ -18,11 +18,11 @@
   "homepage": "https://github.com/JGaviria0/BotNotasUTP#readme",
   "type": "module",
   "dependencies": {
-    "ical-generator": "^5.0.1",
+    "ical-generator": "^6.0.1",
     "dotenv": "^16.3.1",
     "puppeteer": "^19.8.5",
     "random-useragent": "^0.5.0",
-    "telegraf": "^4.12.2"
+    "telegraf": "^4.15.3"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"

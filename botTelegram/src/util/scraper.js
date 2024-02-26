@@ -1,5 +1,6 @@
 import puppeteer, { Page } from "puppeteer";
-import {ICalCalendar} from 'ical-generator';
+import {ICalCalendar, ICalAlarmType} from 'ical-generator';
+import { writeFile } from 'node:fs/promises';
 import * as randomUseragent from "random-useragent";
 import { IncorrectData } from "./errors.js";
 
@@ -100,25 +101,28 @@ const getGrades = async (page, programId) => {
         }
         return {grades, gradesForSubject}
     });
-
-    //console.log("GRADES:", getGrades.grades);
+    
     // browser.close().then(setTimeout(() => console.log("Closing browser"), 600));
     return getGrades
 }
 
 const getSchedule = async (page) => {
     await new Promise(r => setTimeout(r, 600));
-    const {info, subjects} = await page.evaluate( () => {
+
+    const {info, subjects, teachers} = await page.evaluate( () => {
         var scheduleData = Array.from(document.querySelector('div>fieldset.form1line').childNodes);
-        var info = []
-        var subjects = []
+        var info = [], subjects = [], teachers = [];
 
         for (var elemento of scheduleData){
             if (elemento.nodeName == '#text' && !elemento.textContent.includes('\n')){
                 info.push(elemento.textContent.replace(/,\s$/, '').replace(/\sde\s/g,' ').replace(/\sa\s/g,' '));
             }
-            if (elemento.nodeName == 'STRONG'){
+            if (elemento.nodeName == 'STRONG' && !elemento.textContent.includes('@')){
                 subjects.push(elemento.innerText.slice(6));
+            }
+
+            if (elemento.nodeName == 'STRONG' && elemento.textContent.includes('@')){
+                teachers.push(elemento.innerText.slice(3));
             }
         }
 
@@ -126,7 +130,7 @@ const getSchedule = async (page) => {
             info[i] = info[i].replace(/,\s/g, ' ').split(' ')
         }
 
-        return {info, subjects}
+        return {info, subjects, teachers}
     });
 
     // Creating the schedule
@@ -139,27 +143,33 @@ const getSchedule = async (page) => {
         }
     });
 
+
     for (let i = 0; i < info.length; i++) {
         for (let j = 0; j < info[i].length; j+=4) {
             const {startDate, endDate} = getSubjectDate(info[i][j+1] ,info[i][j+2], info[i][j+3])
-            // console.log("TIME:", startDate.getHours());
-            // console.log("TIME END:", endDate.getHours());
             calendar.createEvent({
                 start: startDate,
                 end: endDate,
                 summary: subjects[i],
-                description: 'Advice: You would should go to the classroom 10min before',
+                description: teachers[i] + '\n\nAdvice: You would should go to the classroom 10min before',
                 location: `Edificio ${info[i][j]}`,
                 repeating: {
                     freq: 'WEEKLY',
-                    until: new Date(2023, 10, 19, 0, 0, 0, 0),
+                    until: new Date(2024, 5, 26, 0, 0, 0, 0),
                     wkst: 'SU'
-                }
+                },
+                alarms: [
+                    {type: ICalAlarmType.display, trigger: 1200},
+                ]
             });
         }
     }
+
+    
+
+
     try {
-      calendar.save('./calendar.ics');
+    await writeFile('./calendar.ics', calendar.toString());
     } catch (error) {
       console.log(error);
     }
